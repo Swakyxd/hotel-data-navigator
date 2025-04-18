@@ -1,73 +1,121 @@
-# Welcome to your Lovable project
 
-## Project info
+# Hotel Data Navigator
 
-**URL**: https://lovable.dev/projects/5531c26d-ea2b-40ac-968e-64b74b43358f
+A database frontend system for hotel reservation management.
 
-## How can I edit this code?
+## Database Schema
 
-There are several ways of editing your application.
+```sql
+CREATE DATABASE IF NOT EXISTS hotel_reservation;
+USE hotel_reservation;
 
-**Use Lovable**
+-- Customer Table
+CREATE TABLE Customer (
+    Customer_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Email VARCHAR(100) UNIQUE,
+    Country VARCHAR(50)
+);
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5531c26d-ea2b-40ac-968e-64b74b43358f) and start prompting.
+-- Hotel Table
+CREATE TABLE Hotel (
+    Hotel_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Location VARCHAR(100)
+);
 
-Changes made via Lovable will be committed automatically to this repo.
+-- Room Category Table
+CREATE TABLE Room_Category (
+    Category_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Type VARCHAR(50),
+    Price DECIMAL(10, 2)
+);
 
-**Use your preferred IDE**
+-- Rooms Table
+CREATE TABLE Rooms (
+    Room_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Room_no VARCHAR(10),
+    Status VARCHAR(20),
+    Hotel_Id INT,
+    Category_Id INT,
+    FOREIGN KEY (Hotel_Id) REFERENCES Hotel(Hotel_Id),
+    FOREIGN KEY (Category_Id) REFERENCES Room_Category(Category_Id)
+);
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+-- Reservation Table
+CREATE TABLE Reservation (
+    Reservation_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Start_Date DATE,
+    End_Date DATE,
+    Period INT,
+    Customer_Id INT,
+    Hotel_Id INT,
+    FOREIGN KEY (Customer_Id) REFERENCES Customer(Customer_Id),
+    FOREIGN KEY (Hotel_Id) REFERENCES Hotel(Hotel_Id)
+);
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+-- Reservation ↔ Room Category (Many-to-Many via bridge table)
+CREATE TABLE Reservation_RoomCategory (
+    Reservation_Id INT,
+    Category_Id INT,
+    PRIMARY KEY (Reservation_Id, Category_Id),
+    FOREIGN KEY (Reservation_Id) REFERENCES Reservation(Reservation_Id),
+    FOREIGN KEY (Category_Id) REFERENCES Room_Category(Category_Id)
+);
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+-- Invoice Table
+CREATE TABLE Invoice (
+    Invoice_Id INT AUTO_INCREMENT PRIMARY KEY,
+    Invoice_Description TEXT,
+    Amount DECIMAL(10, 2),
+    Status VARCHAR(20),
+    Customer_Id INT,
+    FOREIGN KEY (Customer_Id) REFERENCES Customer(Customer_Id)
+);
 ```
 
-**Edit a file directly in GitHub**
+## Setup Instructions
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Clone this repository
+2. Install the dependencies:
+   ```
+   npm install
+   ```
+3. Set up your MySQL database:
+   - Create a MySQL database
+   - Run the SQL schema script provided above
+   - Update the database connection settings in `server.js`
 
-**Use GitHub Codespaces**
+4. Start the application:
+   ```
+   npm start
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+5. Open your browser and navigate to `http://localhost:5000`
 
-## What technologies are used for this project?
+## Features
 
-This project is built with:
+- Complete CRUD operations for all database tables
+- Dashboard with summary statistics
+- Clean, responsive user interface
+- Relational data management
+- Form validation
+- Confirmation dialogs for destructive operations
+- Success/error notifications
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Technologies Used
 
-## How can I deploy this project?
+- **Backend**: Node.js, Express
+- **Database**: MySQL
+- **Frontend**: HTML, CSS, JavaScript (Vanilla)
 
-Simply open [Lovable](https://lovable.dev/projects/5531c26d-ea2b-40ac-968e-64b74b43358f) and click on Share -> Publish.
+## Usage Guide
 
-## Can I connect a custom domain to my Lovable project?
+- Use the sidebar to navigate between different data tables
+- Click "Add" buttons to create new records
+- Use the "Edit" and "Delete" buttons for each record to modify or remove data
+- Forms include validation to ensure data integrity
 
-Yes, you can!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT
