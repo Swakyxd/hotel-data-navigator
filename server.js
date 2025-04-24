@@ -1,9 +1,13 @@
 
-const express = require('express');
-const mysql = require('mysql2');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const path = require('path');
+import express from 'express';
+import mysql from 'mysql2';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '',  // Update with your MySQL password
+  password: 'Swaky2004#',  // Update with your MySQL password
   database: 'hotel_reservation'
 });
 
@@ -33,7 +37,20 @@ db.connect((err) => {
 
 // Customer Routes
 app.get('/api/customers', (req, res) => {
-  db.query('SELECT * FROM Customer', (err, results) => {
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = 'SELECT * FROM Customer';
+  let params = [];
+
+  if (searchTerm) {
+    query = `SELECT * FROM Customer WHERE
+             Name LIKE ? OR
+             Email LIKE ? OR
+             Country LIKE ?`;
+    params = [searchTerm, searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching customers:', err);
       return res.status(500).json({ error: 'Failed to fetch customers' });
@@ -44,8 +61,8 @@ app.get('/api/customers', (req, res) => {
 
 app.post('/api/customers', (req, res) => {
   const { Name, Email, Country } = req.body;
-  db.query('INSERT INTO Customer (Name, Email, Country) VALUES (?, ?, ?)', 
-    [Name, Email, Country], 
+  db.query('INSERT INTO Customer (Name, Email, Country) VALUES (?, ?, ?)',
+    [Name, Email, Country],
     (err, results) => {
       if (err) {
         console.error('Error adding customer:', err);
@@ -59,8 +76,8 @@ app.post('/api/customers', (req, res) => {
 app.put('/api/customers/:id', (req, res) => {
   const id = req.params.id;
   const { Name, Email, Country } = req.body;
-  db.query('UPDATE Customer SET Name = ?, Email = ?, Country = ? WHERE Customer_Id = ?', 
-    [Name, Email, Country, id], 
+  db.query('UPDATE Customer SET Name = ?, Email = ?, Country = ? WHERE Customer_Id = ?',
+    [Name, Email, Country, id],
     (err) => {
       if (err) {
         console.error('Error updating customer:', err);
@@ -84,7 +101,19 @@ app.delete('/api/customers/:id', (req, res) => {
 
 // Hotel Routes
 app.get('/api/hotels', (req, res) => {
-  db.query('SELECT * FROM Hotel', (err, results) => {
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = 'SELECT * FROM Hotel';
+  let params = [];
+
+  if (searchTerm) {
+    query = `SELECT * FROM Hotel WHERE
+             Name LIKE ? OR
+             Location LIKE ?`;
+    params = [searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching hotels:', err);
       return res.status(500).json({ error: 'Failed to fetch hotels' });
@@ -95,8 +124,8 @@ app.get('/api/hotels', (req, res) => {
 
 app.post('/api/hotels', (req, res) => {
   const { Name, Location } = req.body;
-  db.query('INSERT INTO Hotel (Name, Location) VALUES (?, ?)', 
-    [Name, Location], 
+  db.query('INSERT INTO Hotel (Name, Location) VALUES (?, ?)',
+    [Name, Location],
     (err, results) => {
       if (err) {
         console.error('Error adding hotel:', err);
@@ -110,8 +139,8 @@ app.post('/api/hotels', (req, res) => {
 app.put('/api/hotels/:id', (req, res) => {
   const id = req.params.id;
   const { Name, Location } = req.body;
-  db.query('UPDATE Hotel SET Name = ?, Location = ? WHERE Hotel_Id = ?', 
-    [Name, Location, id], 
+  db.query('UPDATE Hotel SET Name = ?, Location = ? WHERE Hotel_Id = ?',
+    [Name, Location, id],
     (err) => {
       if (err) {
         console.error('Error updating hotel:', err);
@@ -135,7 +164,19 @@ app.delete('/api/hotels/:id', (req, res) => {
 
 // Room Category Routes
 app.get('/api/room-categories', (req, res) => {
-  db.query('SELECT * FROM Room_Category', (err, results) => {
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = 'SELECT * FROM Room_Category';
+  let params = [];
+
+  if (searchTerm) {
+    query = `SELECT * FROM Room_Category WHERE
+             Type LIKE ? OR
+             Price LIKE ?`;
+    params = [searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching room categories:', err);
       return res.status(500).json({ error: 'Failed to fetch room categories' });
@@ -146,8 +187,8 @@ app.get('/api/room-categories', (req, res) => {
 
 app.post('/api/room-categories', (req, res) => {
   const { Type, Price } = req.body;
-  db.query('INSERT INTO Room_Category (Type, Price) VALUES (?, ?)', 
-    [Type, Price], 
+  db.query('INSERT INTO Room_Category (Type, Price) VALUES (?, ?)',
+    [Type, Price],
     (err, results) => {
       if (err) {
         console.error('Error adding room category:', err);
@@ -161,8 +202,8 @@ app.post('/api/room-categories', (req, res) => {
 app.put('/api/room-categories/:id', (req, res) => {
   const id = req.params.id;
   const { Type, Price } = req.body;
-  db.query('UPDATE Room_Category SET Type = ?, Price = ? WHERE Category_Id = ?', 
-    [Type, Price, id], 
+  db.query('UPDATE Room_Category SET Type = ?, Price = ? WHERE Category_Id = ?',
+    [Type, Price, id],
     (err) => {
       if (err) {
         console.error('Error updating room category:', err);
@@ -186,13 +227,31 @@ app.delete('/api/room-categories/:id', (req, res) => {
 
 // Rooms Routes
 app.get('/api/rooms', (req, res) => {
-  const query = `
-    SELECT r.*, h.Name as HotelName, rc.Type as CategoryType 
-    FROM Rooms r 
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = `
+    SELECT r.*, h.Name as HotelName, rc.Type as CategoryType
+    FROM Rooms r
     JOIN Hotel h ON r.Hotel_Id = h.Hotel_Id
     JOIN Room_Category rc ON r.Category_Id = rc.Category_Id
   `;
-  db.query(query, (err, results) => {
+  let params = [];
+
+  if (searchTerm) {
+    query = `
+      SELECT r.*, h.Name as HotelName, rc.Type as CategoryType
+      FROM Rooms r
+      JOIN Hotel h ON r.Hotel_Id = h.Hotel_Id
+      JOIN Room_Category rc ON r.Category_Id = rc.Category_Id
+      WHERE r.Room_no LIKE ?
+      OR r.Status LIKE ?
+      OR h.Name LIKE ?
+      OR rc.Type LIKE ?
+    `;
+    params = [searchTerm, searchTerm, searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching rooms:', err);
       return res.status(500).json({ error: 'Failed to fetch rooms' });
@@ -203,8 +262,8 @@ app.get('/api/rooms', (req, res) => {
 
 app.post('/api/rooms', (req, res) => {
   const { Room_no, Status, Hotel_Id, Category_Id } = req.body;
-  db.query('INSERT INTO Rooms (Room_no, Status, Hotel_Id, Category_Id) VALUES (?, ?, ?, ?)', 
-    [Room_no, Status, Hotel_Id, Category_Id], 
+  db.query('INSERT INTO Rooms (Room_no, Status, Hotel_Id, Category_Id) VALUES (?, ?, ?, ?)',
+    [Room_no, Status, Hotel_Id, Category_Id],
     (err, results) => {
       if (err) {
         console.error('Error adding room:', err);
@@ -218,8 +277,8 @@ app.post('/api/rooms', (req, res) => {
 app.put('/api/rooms/:id', (req, res) => {
   const id = req.params.id;
   const { Room_no, Status, Hotel_Id, Category_Id } = req.body;
-  db.query('UPDATE Rooms SET Room_no = ?, Status = ?, Hotel_Id = ?, Category_Id = ? WHERE Room_Id = ?', 
-    [Room_no, Status, Hotel_Id, Category_Id, id], 
+  db.query('UPDATE Rooms SET Room_no = ?, Status = ?, Hotel_Id = ?, Category_Id = ? WHERE Room_Id = ?',
+    [Room_no, Status, Hotel_Id, Category_Id, id],
     (err) => {
       if (err) {
         console.error('Error updating room:', err);
@@ -243,13 +302,31 @@ app.delete('/api/rooms/:id', (req, res) => {
 
 // Reservation Routes
 app.get('/api/reservations', (req, res) => {
-  const query = `
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = `
     SELECT r.*, c.Name as CustomerName, h.Name as HotelName
-    FROM Reservation r 
+    FROM Reservation r
     JOIN Customer c ON r.Customer_Id = c.Customer_Id
     JOIN Hotel h ON r.Hotel_Id = h.Hotel_Id
   `;
-  db.query(query, (err, results) => {
+  let params = [];
+
+  if (searchTerm) {
+    query = `
+      SELECT r.*, c.Name as CustomerName, h.Name as HotelName
+      FROM Reservation r
+      JOIN Customer c ON r.Customer_Id = c.Customer_Id
+      JOIN Hotel h ON r.Hotel_Id = h.Hotel_Id
+      WHERE c.Name LIKE ?
+      OR h.Name LIKE ?
+      OR r.Start_Date LIKE ?
+      OR r.End_Date LIKE ?
+    `;
+    params = [searchTerm, searchTerm, searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching reservations:', err);
       return res.status(500).json({ error: 'Failed to fetch reservations' });
@@ -260,15 +337,15 @@ app.get('/api/reservations', (req, res) => {
 
 app.post('/api/reservations', (req, res) => {
   const { Start_Date, End_Date, Period, Customer_Id, Hotel_Id } = req.body;
-  
+
   db.beginTransaction(err => {
     if (err) {
       console.error('Error starting transaction:', err);
       return res.status(500).json({ error: 'Transaction error' });
     }
 
-    db.query('INSERT INTO Reservation (Start_Date, End_Date, Period, Customer_Id, Hotel_Id) VALUES (?, ?, ?, ?, ?)', 
-      [Start_Date, End_Date, Period, Customer_Id, Hotel_Id], 
+    db.query('INSERT INTO Reservation (Start_Date, End_Date, Period, Customer_Id, Hotel_Id) VALUES (?, ?, ?, ?, ?)',
+      [Start_Date, End_Date, Period, Customer_Id, Hotel_Id],
       (err, results) => {
         if (err) {
           return db.rollback(() => {
@@ -276,13 +353,13 @@ app.post('/api/reservations', (req, res) => {
             res.status(500).json({ error: 'Failed to add reservation' });
           });
         }
-        
+
         const reservationId = results.insertId;
-        
+
         // If there are room categories to link (would come from req.body.categories)
         if (req.body.categories && req.body.categories.length > 0) {
           let completed = 0;
-          
+
           req.body.categories.forEach(categoryId => {
             db.query('INSERT INTO Reservation_RoomCategory (Reservation_Id, Category_Id) VALUES (?, ?)',
               [reservationId, categoryId],
@@ -293,7 +370,7 @@ app.post('/api/reservations', (req, res) => {
                     res.status(500).json({ error: 'Failed to link room category' });
                   });
                 }
-                
+
                 completed++;
                 if (completed === req.body.categories.length) {
                   db.commit(err => {
@@ -303,9 +380,9 @@ app.post('/api/reservations', (req, res) => {
                         res.status(500).json({ error: 'Transaction commit failed' });
                       });
                     }
-                    res.status(201).json({ 
-                      id: reservationId, 
-                      message: 'Reservation added successfully' 
+                    res.status(201).json({
+                      id: reservationId,
+                      message: 'Reservation added successfully'
                     });
                   });
                 }
@@ -321,9 +398,9 @@ app.post('/api/reservations', (req, res) => {
                 res.status(500).json({ error: 'Transaction commit failed' });
               });
             }
-            res.status(201).json({ 
-              id: reservationId, 
-              message: 'Reservation added successfully' 
+            res.status(201).json({
+              id: reservationId,
+              message: 'Reservation added successfully'
             });
           });
         }
@@ -335,9 +412,9 @@ app.post('/api/reservations', (req, res) => {
 app.put('/api/reservations/:id', (req, res) => {
   const id = req.params.id;
   const { Start_Date, End_Date, Period, Customer_Id, Hotel_Id } = req.body;
-  
-  db.query('UPDATE Reservation SET Start_Date = ?, End_Date = ?, Period = ?, Customer_Id = ?, Hotel_Id = ? WHERE Reservation_Id = ?', 
-    [Start_Date, End_Date, Period, Customer_Id, Hotel_Id, id], 
+
+  db.query('UPDATE Reservation SET Start_Date = ?, End_Date = ?, Period = ?, Customer_Id = ?, Hotel_Id = ? WHERE Reservation_Id = ?',
+    [Start_Date, End_Date, Period, Customer_Id, Hotel_Id, id],
     (err) => {
       if (err) {
         console.error('Error updating reservation:', err);
@@ -350,7 +427,7 @@ app.put('/api/reservations/:id', (req, res) => {
 
 app.delete('/api/reservations/:id', (req, res) => {
   const id = req.params.id;
-  
+
   db.beginTransaction(err => {
     if (err) {
       console.error('Error starting transaction:', err);
@@ -391,12 +468,29 @@ app.delete('/api/reservations/:id', (req, res) => {
 
 // Invoice Routes
 app.get('/api/invoices', (req, res) => {
-  const query = `
+  const searchTerm = req.query.search ? `%${req.query.search}%` : null;
+
+  let query = `
     SELECT i.*, c.Name as CustomerName
     FROM Invoice i
     JOIN Customer c ON i.Customer_Id = c.Customer_Id
   `;
-  db.query(query, (err, results) => {
+  let params = [];
+
+  if (searchTerm) {
+    query = `
+      SELECT i.*, c.Name as CustomerName
+      FROM Invoice i
+      JOIN Customer c ON i.Customer_Id = c.Customer_Id
+      WHERE i.Invoice_Description LIKE ?
+      OR i.Status LIKE ?
+      OR c.Name LIKE ?
+      OR i.Amount LIKE ?
+    `;
+    params = [searchTerm, searchTerm, searchTerm, searchTerm];
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
       console.error('Error fetching invoices:', err);
       return res.status(500).json({ error: 'Failed to fetch invoices' });
@@ -407,8 +501,8 @@ app.get('/api/invoices', (req, res) => {
 
 app.post('/api/invoices', (req, res) => {
   const { Invoice_Description, Amount, Status, Customer_Id } = req.body;
-  db.query('INSERT INTO Invoice (Invoice_Description, Amount, Status, Customer_Id) VALUES (?, ?, ?, ?)', 
-    [Invoice_Description, Amount, Status, Customer_Id], 
+  db.query('INSERT INTO Invoice (Invoice_Description, Amount, Status, Customer_Id) VALUES (?, ?, ?, ?)',
+    [Invoice_Description, Amount, Status, Customer_Id],
     (err, results) => {
       if (err) {
         console.error('Error adding invoice:', err);
@@ -422,8 +516,8 @@ app.post('/api/invoices', (req, res) => {
 app.put('/api/invoices/:id', (req, res) => {
   const id = req.params.id;
   const { Invoice_Description, Amount, Status, Customer_Id } = req.body;
-  db.query('UPDATE Invoice SET Invoice_Description = ?, Amount = ?, Status = ?, Customer_Id = ? WHERE Invoice_Id = ?', 
-    [Invoice_Description, Amount, Status, Customer_Id, id], 
+  db.query('UPDATE Invoice SET Invoice_Description = ?, Amount = ?, Status = ?, Customer_Id = ? WHERE Invoice_Id = ?',
+    [Invoice_Description, Amount, Status, Customer_Id, id],
     (err) => {
       if (err) {
         console.error('Error updating invoice:', err);
@@ -448,7 +542,7 @@ app.delete('/api/invoices/:id', (req, res) => {
 // Reservation_RoomCategory Routes (bridge table)
 app.get('/api/reservation-room-categories', (req, res) => {
   const query = `
-    SELECT rrc.Reservation_Id, rrc.Category_Id, 
+    SELECT rrc.Reservation_Id, rrc.Category_Id,
            rc.Type as CategoryType, r.Start_Date, r.End_Date,
            c.Name as CustomerName
     FROM Reservation_RoomCategory rrc
